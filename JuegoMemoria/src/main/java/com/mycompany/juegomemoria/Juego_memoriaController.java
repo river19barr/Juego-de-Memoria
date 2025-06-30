@@ -64,11 +64,9 @@ public class Juego_memoriaController implements Initializable {
         // Inicializar música de fondo
         inicializarMusica();
         
-        // La imagen de fondo ya se carga en el FXML, esta línea es opcional o para depuración.
-        // Si hay problemas, descoméntala y revisa la consola para ver errores de carga.
+        
         try {
-            // Esta línea NO DEBERÍA ser necesaria si el FXML ya carga la imagen de fondo.
-            // Si la mantienes, asegúrate de que la ruta sea correcta.
+            
             backgroundImageView.setImage(new Image(getClass().getResource("/com/mycompany/juegomemoria/imagenes/fondoPantalla.jpg").toExternalForm()));
         } catch (IllegalArgumentException e) {
             System.err.println("ERROR: No se pudo cargar la imagen de fondo: /com/mycompany/juegomemoria/imagenes/fondoPantalla.jpg");
@@ -128,7 +126,7 @@ public class Juego_memoriaController implements Initializable {
             tableroGrid.getRowConstraints().add(rowConstraints);
         }
 
-        // --- Crea y añade las cartas al GridPane ---
+        //  Crea y añade las cartas al GridPane 
         int cartaIndex = 0;
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
@@ -171,7 +169,7 @@ public class Juego_memoriaController implements Initializable {
         System.out.println("- MP4 (solo audio)");
         System.out.println("- M4A");
         
-        // Formatos soportados por javax.sound.sampled
+        
         System.out.println("\nFormatos soportados por javax.sound.sampled:");
         System.out.println("- WAV");
         System.out.println("- AIFF");
@@ -226,7 +224,7 @@ public class Juego_memoriaController implements Initializable {
             if (musicaActiva) {
                 audioClip.start();
             }
-            System.out.println("Música de fondo continua creada exitosamente - durará toda la ejecución");
+            System.out.println("Música de fondo continua creada exitosamente");
             
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo crear la música de fondo: " + e.getMessage());
@@ -374,7 +372,7 @@ public class Juego_memoriaController implements Initializable {
     @FXML
     private void handleMenuButtonAction() {
         System.out.println("El botón 'Menú Principal' ha sido presionado.");
-        // Lógica para cambiar a la escena del menú principal (si existe)
+        
     }
 
     public void updateTimeDisplay(String newTime) {
