@@ -80,7 +80,6 @@
     border-color: #4287f5;
 }
 
-/* Media queries para diferentes tamaños de pantalla */
 @media (max-width: 800px) {
     .sidebar-label {
         -fx-font-size: 12px;
