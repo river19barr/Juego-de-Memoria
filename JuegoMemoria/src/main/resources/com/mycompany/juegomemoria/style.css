@@ -1,0 +1,110 @@
+/* Estilos responsive para el juego de memoria */
+
+.root {
+    -fx-background-color: transparent;
+    background-color: transparent;
+}
+
+.sidebar {
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    border-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 2);
+}
+
+.sidebar-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-padding: 5px;
+    font-size: 14px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 5px;
+}
+
+.menu-button {
+    -fx-font-size: 12px;
+    -fx-background-color: linear-gradient(to bottom, #4287f5, #2d5aa0);
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 10px 15px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0, 0, 1);
+    font-size: 12px;
+    background-color: #4287f5;
+    background: linear-gradient(to bottom, #4287f5, #2d5aa0);
+    color: white;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.menu-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #5a9cf7, #3d6bb3);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 8, 0, 0, 2);
+    background-color: #5a9cf7;
+    background: linear-gradient(to bottom, #5a9cf7, #3d6bb3);
+}
+
+.menu-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #2d5aa0, #1e3d6b);
+    background-color: #2d5aa0;
+    background: linear-gradient(to bottom, #2d5aa0, #1e3d6b);
+}
+
+.card-container {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #ddd;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 1);
+    -fx-cursor: hand;
+    background-color: white;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    border-color: #ddd;
+    border-width: 2px;
+    cursor: pointer;
+}
+
+.card-container:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+    -fx-border-color: #4287f5;
+    border-color: #4287f5;
+}
+
+/* Media queries para diferentes tamaños de pantalla */
+@media (max-width: 800px) {
+    .sidebar-label {
+        -fx-font-size: 12px;
+        font-size: 12px;
+    }
+    
+    .menu-button {
+        -fx-font-size: 10px;
+        -fx-padding: 8px 12px;
+        font-size: 10px;
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .sidebar-label {
+        -fx-font-size: 10px;
+        font-size: 10px;
+    }
+    
+    .menu-button {
+        -fx-font-size: 9px;
+        -fx-padding: 6px 10px;
+        font-size: 9px;
+        padding: 6px 10px;
+    }
+}
