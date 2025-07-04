@@ -1,6 +1,6 @@
 com\mycompany\juegomemoria\App.class
+com\mycompany\juegomemoria\PrimaryController.class
 com\mycompany\juegomemoria\SecondaryController.class
+com\mycompany\juegomemoria\Juego_memoriaController$1.class
 com\mycompany\juegomemoria\Juego_memoriaController.class
 module-info.class
-com\mycompany\juegomemoria\PrimaryController.class
-com\mycompany\juegomemoria\Juego_memoriaController$1.class
