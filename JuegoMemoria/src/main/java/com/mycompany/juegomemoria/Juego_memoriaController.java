@@ -30,7 +30,7 @@ public class Juego_memoriaController implements Initializable {
     @FXML private BorderPane mainContentPane;
     @FXML private GridPane tableroGrid;
 
-    // Elementos de la barra lateral
+    
     @FXML private VBox sideMenuBox;
     @FXML private Label tiempoLabel;
     @FXML private Label intentosLabel;
@@ -38,7 +38,7 @@ public class Juego_memoriaController implements Initializable {
     @FXML private Button menuButton;
     @FXML private Button musicButton;
 
-    // Propiedades y lógica del juego
+    
     private final int filas = 3;
     private final int columnas = 4;
     private final int totalCartas = filas * columnas;
@@ -47,9 +47,9 @@ public class Juego_memoriaController implements Initializable {
     private StackPane cartaVolteada2 = null;
     private boolean clickBloqueado = false;
 
-    // Para almacenar solo los nombres de archivo de las imágenes únicas (sin la ruta completa)
+    
     private List<String> nombresImagenesUnicas;
-    private List<String> nombresCartasBarajadas; // Nombres de archivo para las 12 cartas (parejas) barajadas
+    private List<String> nombresCartasBarajadas; 
 
     // Música de fondo
     private Clip audioClip;
@@ -57,11 +57,11 @@ public class Juego_memoriaController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Configurar la imagen de fondo para cubrir toda la pantalla
+        
         backgroundImageView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundImageView.fitHeightProperty().bind(rootPane.heightProperty());
         
-        // Inicializar música de fondo
+        
         inicializarMusica();
         
         
@@ -74,7 +74,7 @@ public class Juego_memoriaController implements Initializable {
             e.printStackTrace();
         }
 
-        // Inicializar los textos de las etiquetas
+       
         tiempoLabel.setText("Tiempo: 00:00");
         intentosLabel.setText("Intentos: 0");
         puntajeLabel.setText("Puntos: 0");
@@ -88,7 +88,7 @@ public class Juego_memoriaController implements Initializable {
             "Tiger1.jpg"
         );
 
-        // Prepara las rutas para las cartas del juego (duplicar y barajar)
+        
         nombresCartasBarajadas = new ArrayList<>();
         int paresNecesarios = totalCartas / 2;
 
@@ -98,7 +98,7 @@ public class Juego_memoriaController implements Initializable {
             paresNecesarios = nombresImagenesUnicas.size();
         } 
 
-        // Crear pares de cartas (duplicar cada imagen)
+        
         for (int i = 0; i < paresNecesarios; i++) {
             String nombreArchivo = nombresImagenesUnicas.get(i);
             nombresCartasBarajadas.add(nombreArchivo); // Primera carta del par
@@ -107,7 +107,7 @@ public class Juego_memoriaController implements Initializable {
         Collections.shuffle(nombresCartasBarajadas);
 
 
-        // Limpia y configura las restricciones del GridPane dinámicamente
+        
         tableroGrid.getChildren().clear();
         tableroGrid.getColumnConstraints().clear();
         tableroGrid.getRowConstraints().clear();
@@ -126,7 +126,7 @@ public class Juego_memoriaController implements Initializable {
             tableroGrid.getRowConstraints().add(rowConstraints);
         }
 
-        //  Crea y añade las cartas al GridPane 
+         
         int cartaIndex = 0;
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
@@ -143,14 +143,14 @@ public class Juego_memoriaController implements Initializable {
 
     private void inicializarMusica() {
         try {
-            // Verificar formatos de audio soportados
+            
             verificarFormatosAudio();
             
-            // Cargar archivo de música WAV
+            
             cargarMusicaWAV();
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo inicializar la música de fondo: " + e.getMessage());
-            // Fallback: crear música sintética si no se puede cargar el archivo
+            
             crearTonoMusical();
         }
     }
@@ -182,11 +182,11 @@ public class Juego_memoriaController implements Initializable {
 
     private void crearTonoMusical() {
         try {
-            // Crear una melodía más larga y continua
-            float sampleRate = 44100;
-            byte[] audioData = new byte[44100 * 30]; // 15 segundos de audio para una melodía más larga
             
-            // Crear una secuencia de notas musicales más compleja
+            float sampleRate = 44100;
+            byte[] audioData = new byte[44100 * 30];
+            
+            
             double[] frecuencias = {
                 262.0, 294.0, 330.0, 349.0, 392.0, 440.0, 494.0, 523.0, // C, D, E, F, G, A, B, C
                 523.0, 494.0, 440.0, 392.0, 349.0, 330.0, 294.0, 262.0, // C, B, A, G, F, E, D, C (descendente)
@@ -199,7 +199,7 @@ public class Juego_memoriaController implements Initializable {
             for (int nota = 0; nota < frecuencias.length; nota++) {
                 for (int i = 0; i < muestrasPorNota; i += 2) {
                     if (index < audioData.length - 1) {
-                        // Agregar variación en la amplitud para hacer la música más dinámica
+                        
                         double amplitud = 3000 + Math.sin(nota * Math.PI / 4) * 1000;
                         short sample = (short) (Math.sin(2 * Math.PI * frecuencias[nota] * i / (sampleRate * 2)) * amplitud);
                         audioData[index] = (byte) (sample & 0xFF);
@@ -217,7 +217,7 @@ public class Juego_memoriaController implements Initializable {
             audioClip.open(audioStream);
             audioClip.loop(Clip.LOOP_CONTINUOUSLY); // Repetir indefinidamente
             
-            // Control de volumen - hacer más audible
+            
             FloatControl volumeControl = (FloatControl) audioClip.getControl(FloatControl.Type.MASTER_GAIN);
             volumeControl.setValue(-3.0f); // Volumen aún más alto
             
@@ -233,17 +233,17 @@ public class Juego_memoriaController implements Initializable {
 
     private void cargarMusicaWAV() {
         try {
-            // Cargar el archivo de música WAV
+            
             URL musicaURL = getClass().getResource("/com/mycompany/juegomemoria/audio/MUSICA2.wav");
             if (musicaURL != null) {
                 AudioInputStream audioStream = AudioSystem.getAudioInputStream(musicaURL);
                 audioClip = AudioSystem.getClip();
                 audioClip.open(audioStream);
-                audioClip.loop(Clip.LOOP_CONTINUOUSLY); // Repetir indefinidamente
+                audioClip.loop(Clip.LOOP_CONTINUOUSLY); // 
                 
                 // Control de volumen
                 FloatControl volumeControl = (FloatControl) audioClip.getControl(FloatControl.Type.MASTER_GAIN);
-                volumeControl.setValue(-5.0f); // Volumen al 50% aproximadamente
+                volumeControl.setValue(-5.0f); 
                 
                 if (musicaActiva) {
                     audioClip.start();
@@ -296,18 +296,18 @@ public class Juego_memoriaController implements Initializable {
 
         ImageView reverso = new ImageView();
         try {
-            // Ruta del reverso
+            
             reverso.setImage(new Image(getClass().getResource("/com/mycompany/juegomemoria/imagenes/fondoCartas.jpg").toExternalForm()));
         } catch (IllegalArgumentException e) {
             System.err.println("ERROR: No se pudo cargar imagen de reverso: /com/mycompany/juegomemoria/imagenes/fondoCartas.jpg");
             reverso.setImage(null);
         }
 
-        // Ajustar el escalado para que la imagen ocupe todo el espacio de la carta
-        frente.setPreserveRatio(false); // FALSE para que se estire y llene el espacio
+        
+        frente.setPreserveRatio(false); 
         reverso.setPreserveRatio(false);
 
-        // Vincula el tamaño de la imagen al tamaño del contenedor (StackPane)
+        
         frente.fitWidthProperty().bind(contenedor.widthProperty());
         frente.fitHeightProperty().bind(contenedor.heightProperty());
         reverso.fitWidthProperty().bind(contenedor.widthProperty());
