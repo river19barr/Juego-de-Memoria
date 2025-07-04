@@ -9,9 +9,9 @@ public class App extends Application {
     private static Scene scene;
     @Override
     public void start(Stage stage) throws IOException {
-        
-        
-        scene = new Scene(loadFXML("com/mycompany/juegomemoria/Juego_memoria")); 
+        // Asegúrate de que este nombre FXML coincida con tu archivo FXML
+        // ¡CAMBIA ESTA LÍNEA AQUÍ!
+        scene = new Scene(loadFXML("com/mycompany/juegomemoria/Juego_memoria")); // <-- Sin dimensiones fijas
         stage.setTitle("Juego de Memoria");
         stage.setScene(scene);
         stage.setMinWidth(800);
@@ -23,8 +23,8 @@ public class App extends Application {
         scene.setRoot(loadFXML(fxml));
     }
     private static Parent loadFXML(String fxml) throws IOException {
-        
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/" + fxml + ".fxml")); 
+        // ¡Y CAMBIA ESTA LÍNEA TAMBIÉN!
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/" + fxml + ".fxml")); // <-- Agrega el '/'
         return fxmlLoader.load();
     }
 
