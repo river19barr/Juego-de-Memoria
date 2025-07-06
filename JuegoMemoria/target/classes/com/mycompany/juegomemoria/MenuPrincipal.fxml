@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<StackPane fx:id="rootPane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+           fx:controller="com.mycompany.juegomemoria.MenuPrincipalController" minWidth="800" minHeight="600">
+    
+    <ImageView fx:id="backgroundImageView" preserveRatio="false" StackPane.alignment="CENTER" styleClass="background-image-view">
+        <image>
+            <Image url="@imagenes/fondoPooh.jpg" />
+        </image>
+    </ImageView>
+
+    <VBox fx:id="menuContainer" styleClass="menu-container" spacing="20.0" alignment="CENTER" maxWidth="420" minWidth="420" prefWidth="420" maxHeight="380" minHeight="380" prefHeight="380" StackPane.alignment="CENTER">
+        <padding>
+            <Insets top="12.0" right="12.0" bottom="12.0" left="12.0" />
+        </padding>
+        
+        <Label text="Juego de Memoria" styleClass="title-label">
+            <font>
+                <Font size="36.0" />
+            </font>
+        </Label>
+        
+        <VBox spacing="15.0" alignment="CENTER" maxWidth="400" minWidth="250">
+            <Button fx:id="iniciarJuegoButton" mnemonicParsing="false" onAction="#handleIniciarJuego" styleClass="menu-button" text="Iniciar Juego" maxWidth="300" minHeight="50" />
+            
+            <Button fx:id="historialButton" mnemonicParsing="false" onAction="#handleHistorial" styleClass="menu-button" text="Historial de Partidas" maxWidth="300" minHeight="50" />
+            
+            <VBox spacing="5.0" alignment="CENTER" maxWidth="300">
+                <Label text="Volumen de Música" styleClass="sidebar-label" />
+                <HBox spacing="10" alignment="CENTER" maxWidth="300">
+                    <Label fx:id="iconoVolumen" text="🔊" styleClass="volume-icon"/>
+                    <Slider fx:id="volumenSlider" min="0.0" max="100.0" value="50.0"
+                            showTickLabels="false" showTickMarks="false"
+                            onMouseReleased="#handleVolumenChange"
+                            styleClass="custom-slider"/>
+                    <Label fx:id="valorVolumen" text="50" styleClass="volume-value"/>
+                </HBox>
+            </VBox>
+            
+            <Button fx:id="salirButton" mnemonicParsing="false" onAction="#handleSalir" styleClass="menu-button" text="Salir" maxWidth="300" minHeight="50" />
+        </VBox>
+    </VBox>
+</StackPane> 
