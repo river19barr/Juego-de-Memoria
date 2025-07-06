@@ -12,23 +12,26 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 
 <StackPane fx:id="rootPane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
            fx:controller="com.mycompany.juegomemoria.Juego_memoriaController"> 
     
     <ImageView fx:id="backgroundImageView" preserveRatio="false" StackPane.alignment="CENTER">
         <image>
-            <Image url="@imagenes/fondoPantalla.jpg" />
+            <Image url="@imagenes/fondoPooh.jpg" />
         </image>
     </ImageView>
 
     <BorderPane fx:id="mainContentPane">
         <center>
-            <GridPane fx:id="tableroGrid" hgap="10.0" vgap="10.0" BorderPane.alignment="CENTER">
-                <BorderPane.margin>
-                    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-                </BorderPane.margin>
-            </GridPane>
+            <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+                <GridPane fx:id="tableroGrid" hgap="10.0" vgap="10.0" BorderPane.alignment="CENTER" VBox.vgrow="ALWAYS">
+                    <BorderPane.margin>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </BorderPane.margin>
+                </GridPane>
+            </VBox>
         </center>
 
         <right>
@@ -45,12 +48,29 @@
                     <Label fx:id="puntajeLabel" styleClass="sidebar-label" text="Puntos: 0" />
 
                     <Region VBox.vgrow="ALWAYS" />
-                    <Button fx:id="musicButton" mnemonicParsing="false" onAction="#handleMusicButtonAction" styleClass="menu-button" 
-                            text="🔊 Música ON" maxWidth="Infinity" />
-                    <Button fx:id="menuButton" mnemonicParsing="false" onAction="#handleMenuButtonAction" styleClass="menu-button" 
-                            text="Menú Principal" maxWidth="Infinity" />
+                    <Button fx:id="nuevaPartidaButton" mnemonicParsing="false" onAction="#handleReiniciarPartida" styleClass="sidebar-button" text="Nueva Partida" maxWidth="Infinity" />
+                    <Button fx:id="pausarButton" mnemonicParsing="false" onAction="#handlePausarPartida" styleClass="sidebar-button" text="Pausar Partida" maxWidth="Infinity" />
+                    <Button fx:id="reiniciarButton" mnemonicParsing="false" onAction="#handleReiniciarPartida" styleClass="sidebar-button" text="Reiniciar Partida" maxWidth="Infinity" />
+                    <Button fx:id="musicButton" mnemonicParsing="false" onAction="#handleMusicButtonAction" styleClass="sidebar-button" text="Apagar Música" maxWidth="Infinity" />
+                    <Button fx:id="menuButton" mnemonicParsing="false" onAction="#handleMenuButtonAction" styleClass="sidebar-button" text="Volver al Menú" maxWidth="Infinity" />
                 </children>
             </VBox>
         </right>
     </BorderPane>
+
+<!--    Panel de felicitaciones, inicia oculto-->
+    <VBox fx:id="felicidadesPanel" alignment="CENTER" spacing="16.0" styleClass="felicidades-dialog" visible="false" managed="false" StackPane.alignment="CENTER" maxWidth="500" minWidth="500" prefWidth="500" maxHeight="320" minHeight="320" prefHeight="320">
+        <ImageView fx:id="felicidadesImage" fitHeight="140" fitWidth="140" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@imagenes/imagenMensaje.jpg" />
+            </image>
+        </ImageView>
+        <Label text="¡Felicidades!" styleClass="felicidades-title" />
+        <Label text="Has completado el juego. ¿Quieres jugar otra partida?" wrapText="true" styleClass="felicidades-msg" />
+        <HBox spacing="24" alignment="CENTER">
+            <Button fx:id="siButton" text="Sí" styleClass="felicidades-btn-si" />
+            <Button fx:id="noButton" text="No" styleClass="felicidades-btn-no" />
+        </HBox>
+    </VBox>
+
 </StackPane>

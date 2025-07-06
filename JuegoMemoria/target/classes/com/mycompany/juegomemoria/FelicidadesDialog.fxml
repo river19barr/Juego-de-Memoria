@@ -1,0 +1,19 @@
+e<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:id="root" alignment="CENTER" spacing="24.0" styleClass="felicidades-dialog">
+    <ImageView fx:id="felicidadesImage" fitHeight="100" fitWidth="100" pickOnBounds="true" preserveRatio="true">
+        <image>
+            <Image url="@imagenes/imagenMensaje.jpg" />
+        </image>
+    </ImageView>
+    <Label text="¡Felicidades!" styleClass="felicidades-title" />
+    <Label text="Has completado el juego. ¿Quieres jugar otra partida?" wrapText="true" styleClass="felicidades-msg" />
+    <HBox spacing="24" alignment="CENTER">
+        <Button fx:id="siButton" text="Sí" styleClass="felicidades-btn-si" />
+        <Button fx:id="noButton" text="No" styleClass="felicidades-btn-no" />
+    </HBox>
+</VBox> 
