@@ -62,6 +62,10 @@ public class Juego_memoriaController implements Initializable {
     private boolean partidaPausada = false;
 
     private int parejasEncontradas = 0;
+    private int puntajeTotal = 0;
+    private int intentos = 0;
+
+    private String cartaTrampaNombre = null;
 
     @FXML private VBox felicidadesPanel;
     @FXML private Button siButton;
@@ -85,8 +89,10 @@ public class Juego_memoriaController implements Initializable {
 
        
         tiempoLabel.setText("Tiempo: 00:00");
-        intentosLabel.setText("Intentos: 0");
-        puntajeLabel.setText("Puntos: 0");
+        // Inicializar labels de intentos y puntaje
+        intentos = 0;
+        puntajeTotal = 0;
+        actualizarLabels();
 
         nombresImagenesUnicas = List.of(
             "Canguros.jpg",
@@ -114,6 +120,9 @@ public class Juego_memoriaController implements Initializable {
             nombresCartasBarajadas.add(nombreArchivo); // Segunda carta del par (duplicado)
         }
         Collections.shuffle(nombresCartasBarajadas);
+
+        // Seleccionar la última pareja como carta trampa
+        cartaTrampaNombre = nombresCartasBarajadas.get(nombresCartasBarajadas.size() - 1);
 
 
         
@@ -230,6 +239,8 @@ public class Juego_memoriaController implements Initializable {
         } else if (cartaVolteada2 == null && cartaClickeada != cartaVolteada1) {
             cartaVolteada2 = cartaClickeada;
             clickBloqueado = true;
+            intentos++; // Incrementar intentos
+            actualizarLabels(); // Actualizar la vista
             
             ImageView frente1 = (ImageView) cartaVolteada1.getChildren().get(1);
             ImageView frente2 = (ImageView) cartaVolteada2.getChildren().get(1);
@@ -257,11 +268,29 @@ public class Juego_memoriaController implements Initializable {
                     }
                 }, 1000);
             } else {
-                // si son iguales, se dejan volteadas
+                // si son iguales, se dejan volteadas y se suma el puntaje
+                String url1 = frente1.getImage() != null ? frente1.getImage().getUrl() : "";
+                // Comprobar si es la pareja trampa
+                boolean esTrampa = url1.contains(cartaTrampaNombre);
                 cartaVolteada1 = null;
                 cartaVolteada2 = null;
                 clickBloqueado = false;
                 parejasEncontradas++;
+                if (esTrampa) {
+                    // Penalización: restar 2 puntos y mostrar mensaje
+                    puntajeTotal = Math.max(0, puntajeTotal - 2);
+                    actualizarLabels();
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Carta trampa");
+                        alert.setHeaderText(null);
+                        alert.setContentText("¡Carta trampa! Pierdes 2 puntos.");
+                        alert.showAndWait();
+                    });
+                } else {
+                    puntajeTotal += 2;
+                    actualizarLabels();
+                }
                 if (parejasEncontradas == totalCartas / 2) {
                     mostrarMensajeFinPartida();
                 }
@@ -269,6 +298,13 @@ public class Juego_memoriaController implements Initializable {
         }
     }
 
+    private void actualizarLabels() {
+        Platform.runLater(() -> {
+            intentosLabel.setText("Intentos: " + intentos);
+            puntajeLabel.setText("Puntos: " + puntajeTotal);
+        });
+    }
+    
     private void mostrarMensajeFinPartida() {
         Platform.runLater(() -> {
             if (felicidadesPanel != null) {
@@ -305,8 +341,11 @@ public class Juego_memoriaController implements Initializable {
         // reinicia las variables del juego
         partidaPausada = false;
         parejasEncontradas = 0;
+        puntajeTotal = 0;
+        intentos = 0;
         // reinicia las cartas
         reiniciarCartas();
+        actualizarLabels();
         pausarButton.setText("Pausar Partida");
     }
     
