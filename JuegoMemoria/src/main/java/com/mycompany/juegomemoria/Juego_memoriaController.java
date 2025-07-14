@@ -29,6 +29,13 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.util.Duration;
+
+
 public class Juego_memoriaController implements Initializable {
     
     @FXML private StackPane rootPane;
@@ -45,6 +52,7 @@ public class Juego_memoriaController implements Initializable {
     @FXML private Button musicButton;
     @FXML private Button pausarButton;
     @FXML private Button reiniciarButton;
+    @FXML private Button nuevaPartidaButton;
 
     
     private final int filas = 3;
@@ -71,12 +79,22 @@ public class Juego_memoriaController implements Initializable {
     @FXML private Button siButton;
     @FXML private Button noButton;
     @FXML private ImageView felicidadesImage;
+    
+    @FXML private Label labelTiempo;
+
+    @FXML private Label labelIntentos;
+
+    private Timeline timeline;
+    private IntegerProperty TiempoRestante = new SimpleIntegerProperty(60); // segundos
+    private IntegerProperty intentosRestantes = new SimpleIntegerProperty(5); // intentos
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         parejasEncontradas = 0;
         backgroundImageView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundImageView.fitHeightProperty().bind(rootPane.heightProperty());
+        
+      iniciarJuego();
         
         try {
             
@@ -328,26 +346,37 @@ public class Juego_memoriaController implements Initializable {
         if (partidaPausada) {
             // reanudar partida
             partidaPausada = false;
-            pausarButton.setText(" Pausar Partida");
+            pausarButton.setText("Pausar Partida");
         } else {
             // pausar partida
             partidaPausada = true;
-            pausarButton.setText(" Reanudar Partida");
+            pausarButton.setText("Reanudar Partida");
         }
     }
     
     @FXML
     private void handleReiniciarPartida() {
+        // Cancelar el timer actual si existe
+        if (timer != null) {
+            timer.cancel();
+        }
+        
         // reinicia las variables del juego
         partidaPausada = false;
         parejasEncontradas = 0;
         puntajeTotal = 0;
         intentos = 0;
+        
         // reinicia las cartas
         reiniciarCartas();
         actualizarLabels();
         pausarButton.setText("Pausar Partida");
+        
+        // Reiniciar el temporizador
+        iniciarJuego();
     }
+    
+    
     
     private void reiniciarCartas() {
         // baraja  las cartas nuevamente
@@ -381,5 +410,54 @@ public class Juego_memoriaController implements Initializable {
                 musicButton.setText("Apagar Música");
             }
         }
+    }
+    @FXML
+    private int tiempoRestante = 60;
+    private Timer timer;
+    
+    
+    private void iniciarJuego(){
+        
+        tiempoRestante = 60;
+        tiempoLabel.setText("Tiempo: 01:00");
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    // Solo contar el tiempo si la partida no está pausada
+                    if (!partidaPausada) {
+                        if (tiempoRestante > 0) {
+                            tiempoRestante--;
+                            int minutos = tiempoRestante / 60;
+                            int segundos = tiempoRestante % 60;
+                            tiempoLabel.setText(String.format("Tiempo: %02d:%02d", minutos, segundos));
+                        } else {
+                            timer.cancel();
+                            mostrarAlertaFinYReiniciar("¡Se acabó el tiempo! La partida se reiniciará automáticamente.");
+                        }
+                    }
+                });
+            }
+        }, 0, 1000);
+    }
+    
+    private void mostrarAlertaFin(String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle("Fin del juego");
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
+    }
+    
+    private void mostrarAlertaFinYReiniciar(String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle("Fin del juego");
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
+        
+        // Reiniciar la partida automáticamente después de mostrar el mensaje
+        handleReiniciarPartida();
     }
 }
