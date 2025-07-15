@@ -30,7 +30,7 @@ public class MenuPrincipalController implements Initializable {
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Configura la imagen de fondo
+        // imagen de fondo
         backgroundImageView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundImageView.fitHeightProperty().bind(rootPane.heightProperty());
         backgroundImageView.setPreserveRatio(false);
@@ -45,7 +45,7 @@ public class MenuPrincipalController implements Initializable {
             System.err.println("Error cargando imagen de fondo: " + e.getMessage());
         }
         
-        // Configuracion del volumen
+        // configuracion del volumen
         volumenSlider.setValue(volumenGlobal);
         volumenSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             valorVolumen.setText(String.valueOf(newVal.intValue()));
@@ -57,7 +57,7 @@ public class MenuPrincipalController implements Initializable {
             }
         });
         
-        // Inicializa ña música si no está inicializada
+        // inicializa la música si no está inicializada
         if (audioClip == null) {
             inicializarMusica();
         }
@@ -72,7 +72,7 @@ public class MenuPrincipalController implements Initializable {
                 audioClip.open(audioStream);
                 audioClip.loop(Clip.LOOP_CONTINUOUSLY);
                 
-                // Control de volumen
+                // control de volumen
                 FloatControl volumeControl = (FloatControl) audioClip.getControl(FloatControl.Type.MASTER_GAIN);
                 float volumenDB = (float) (20 * Math.log10(volumenGlobal / 100.0));
                 volumeControl.setValue(volumenDB);
