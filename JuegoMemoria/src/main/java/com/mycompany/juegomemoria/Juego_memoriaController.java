@@ -16,24 +16,19 @@ import javafx.application.Platform;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 import java.net.URL;
 import java.util.*;
 import java.util.TimerTask;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
+import javafx.scene.Node;
+import javafx.scene.shape.Rectangle;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.util.Duration;
 
 
 public class Juego_memoriaController implements Initializable {
@@ -68,6 +63,8 @@ public class Juego_memoriaController implements Initializable {
     private List<String> nombresCartasBarajadas; 
 
     private boolean partidaPausada = false;
+    private boolean musicaPausada = false;
+    private long posicionMusica = 0;
 
     private int parejasEncontradas = 0;
     private int puntajeTotal = 0;
@@ -84,34 +81,131 @@ public class Juego_memoriaController implements Initializable {
 
     @FXML private Label labelIntentos;
 
-    private Timeline timeline;
-    private IntegerProperty TiempoRestante = new SimpleIntegerProperty(60); // segundos
-    private IntegerProperty intentosRestantes = new SimpleIntegerProperty(5); // intentos
+    private int tiempoRestante = 60;
+    private Timer timer;
+    
+    
+    private void iniciarJuego(){
+        javax.sound.sampled.Clip audioClip = com.mycompany.juegomemoria.MenuPrincipalController.getAudioClip();
+        // reinicia la música desde el inicio
+        if (audioClip != null) {
+            audioClip.setFramePosition(0);
+            audioClip.start();
+        }
+        tiempoRestante = 60;
+        tiempoLabel.setText("Tiempo: 01:00");
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    // pausa el tiempo si la partida esta pausada
+                    if (!partidaPausada) {
+                        if (tiempoRestante > 0) {
+                            tiempoRestante--;
+                            int minutos = tiempoRestante / 60;
+                            int segundos = tiempoRestante % 60;
+                            tiempoLabel.setText(String.format("Tiempo: %02d:%02d", minutos, segundos));
+                        } else {
+                            timer.cancel();
+                            mostrarAlertaFinYReiniciar("¡Se acabó el tiempo! La partida se reiniciará automáticamente.");
+                        }
+                    }
+                });
+            }
+        }, 0, 1000);
+    }
+    
+    private void mostrarAlertaFinYReiniciar(String mensaje) {
+        if (timer != null) {
+            timer.cancel();
+        }
+        
+        // guarda la partida en el historial
+        int minutos = (60 - tiempoRestante) / 60;
+        int segundos = (60 - tiempoRestante) % 60;
+        String tiempoJugado = String.format("%02d:%02d", minutos, segundos);
+        com.mycompany.juegomemoria.HistorialPartidasController.PartidaGuardada.guardarPartida(tiempoJugado, intentos, puntajeTotal);
+        mostrarDialogoFelicidades();
+    }
+    
+    private void mostrarMensajeFinPartida() {
+        if (timer != null) {
+            timer.cancel();
+        }
+        
+        // guarda la partida en el historial
+        int minutos = (60 - tiempoRestante) / 60;
+        int segundos = (60 - tiempoRestante) % 60;
+        String tiempoJugado = String.format("%02d:%02d", minutos, segundos);
+        com.mycompany.juegomemoria.HistorialPartidasController.PartidaGuardada.guardarPartida(tiempoJugado, intentos, puntajeTotal);
 
-    @Override
+        mostrarDialogoFelicidades();
+    }
+    
+    private void mostrarDialogoFelicidades() {
+        try {
+            // carga el FXML del diálogo de felicitaciones
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/juegomemoria/FelicidadesDialog.fxml"));
+            Parent dialogRoot = loader.load();
+            
+            // crea el diálogo
+            Stage dialogStage = new Stage();
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(rootPane.getScene().getWindow());
+            dialogStage.setTitle("¡Felicidades!");
+            dialogStage.setScene(new Scene(dialogRoot));
+            dialogStage.setResizable(false);
+            
+            // obtiene los botones del diálogo
+            Button siButton = (Button) dialogRoot.lookup("#siButton");
+            Button noButton = (Button) dialogRoot.lookup("#noButton");
+            
+            // configura las acciones de los botones
+            siButton.setOnAction(e -> {
+                dialogStage.close();
+                handleReiniciarPartida();
+            });
+            
+            noButton.setOnAction(e -> {
+                dialogStage.close();
+                handleMenuButtonAction(); // Volver al menú principal
+            });
+            
+            // mostra el diálogo
+            dialogStage.showAndWait();
+            
+        } catch (Exception e) {
+            System.err.println("Error mostrando diálogo de felicitaciones: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fallback: mostrar alerta estándar si falla el diálogo personalizado
+            Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+            alerta.setTitle("Fin del juego");
+            alerta.setHeaderText(null);
+            alerta.setContentText("¡Felicidades! Has encontrado todas las parejas.");
+            alerta.showAndWait();
+            handleReiniciarPartida();
+        }
+    }
+
     public void initialize(URL location, ResourceBundle resources) {
+        System.out.println("DEBUG: Inicializando Juego_memoriaController");
         parejasEncontradas = 0;
         backgroundImageView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundImageView.fitHeightProperty().bind(rootPane.heightProperty());
-        
-      iniciarJuego();
-        
+        iniciarJuego();
         try {
-            
             backgroundImageView.setImage(new Image(getClass().getResource("/com/mycompany/juegomemoria/imagenes/fondoPooh.jpg").toExternalForm()));
         } catch (IllegalArgumentException e) {
             System.err.println("ERROR: No se pudo cargar la imagen de fondo: /com/mycompany/juegomemoria/imagenes/fondoPooh.jpg");
             System.err.println("Detalles: " + e.getMessage());
             e.printStackTrace();
         }
-
-       
         tiempoLabel.setText("Tiempo: 00:00");
-        // Inicializar labels de intentos y puntaje
         intentos = 0;
         puntajeTotal = 0;
         actualizarLabels();
-
         nombresImagenesUnicas = List.of(
             "Canguros.jpg",
             "Conejo.png",
@@ -120,62 +214,66 @@ public class Juego_memoriaController implements Initializable {
             "Pooh.jpg",
             "Tiger.jpg"
         );
-
-        
         nombresCartasBarajadas = new ArrayList<>();
         int paresNecesarios = totalCartas / 2;
-
         if (nombresImagenesUnicas.size() < paresNecesarios) {
             System.err.println("ADVERTENCIA: No hay suficientes imágenes únicas para crear " + paresNecesarios + " pares.");
-            // Manejar este caso: quizá usar un conjunto más pequeño de cartas o repetir más imágenes
             paresNecesarios = nombresImagenesUnicas.size();
-        } 
-
-        
+        }
         for (int i = 0; i < paresNecesarios; i++) {
             String nombreArchivo = nombresImagenesUnicas.get(i);
-            nombresCartasBarajadas.add(nombreArchivo); // Primera carta del par
-            nombresCartasBarajadas.add(nombreArchivo); // Segunda carta del par (duplicado)
+            nombresCartasBarajadas.add(nombreArchivo);
+            nombresCartasBarajadas.add(nombreArchivo);
         }
         Collections.shuffle(nombresCartasBarajadas);
-
-        // Seleccionar la última pareja como carta trampa
         cartaTrampaNombre = nombresCartasBarajadas.get(nombresCartasBarajadas.size() - 1);
-
-
         
+        // configura el GridPane
+        System.out.println("DEBUG: Configurando GridPane");
         tableroGrid.getChildren().clear();
         tableroGrid.getColumnConstraints().clear();
         tableroGrid.getRowConstraints().clear();
-
+        
+        // hace el GridPane más visible
+        tableroGrid.setStyle("");
+        tableroGrid.setMinSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+        tableroGrid.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+        
+        // configura columnas
         for (int j = 0; j < columnas; j++) {
             ColumnConstraints colConstraints = new ColumnConstraints();
             colConstraints.setHgrow(Priority.ALWAYS);
             colConstraints.setPercentWidth(100.0 / columnas);
+            colConstraints.setMinWidth(100);
             tableroGrid.getColumnConstraints().add(colConstraints);
         }
-
+        
+        // configura filas
         for (int i = 0; i < filas; i++) {
             RowConstraints rowConstraints = new RowConstraints();
             rowConstraints.setVgrow(Priority.ALWAYS);
             rowConstraints.setPercentHeight(100.0 / filas);
+            rowConstraints.setMinHeight(100);
             tableroGrid.getRowConstraints().add(rowConstraints);
         }
-
-         
+        
+        // crear y agregar cartas
+        System.out.println("DEBUG: Creando cartas...");
         int cartaIndex = 0;
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
                 if (cartaIndex < nombresCartasBarajadas.size()) {
                     String nombreArchivoFrente = nombresCartasBarajadas.get(cartaIndex++);
-                    StackPane cartaVisual = crearCarta(nombreArchivoFrente); // Pasa solo el nombre del archivo
+                    System.out.println("DEBUG: Creando carta " + cartaIndex + " con imagen: " + nombreArchivoFrente);
+                    StackPane cartaVisual = crearCarta(nombreArchivoFrente);
                     tableroGrid.add(cartaVisual, j, i);
                 } else {
                     break;
                 }
             }
         }
-
+        System.out.println("DEBUG: Total de cartas creadas: " + tableroGrid.getChildren().size());
+        
         if (felicidadesPanel != null) {
             felicidadesPanel.setVisible(false);
             felicidadesPanel.setManaged(false);
@@ -191,6 +289,7 @@ public class Juego_memoriaController implements Initializable {
                 felicidadesPanel.setManaged(false);
             });
         }
+        System.out.println("DEBUG: Inicialización completada");
     }
 
     private StackPane crearCarta(String nombreArchivoFrontal) {
@@ -240,7 +339,7 @@ public class Juego_memoriaController implements Initializable {
 
         return contenedor;
     }
-
+    
     private void manejarClick(StackPane cartaClickeada, ImageView frenteCartaClickeada, ImageView reversoCartaClickeada) {
         if (clickBloqueado || (cartaVolteada1 != null && cartaVolteada2 != null) || partidaPausada) {
             return;
@@ -257,8 +356,8 @@ public class Juego_memoriaController implements Initializable {
         } else if (cartaVolteada2 == null && cartaClickeada != cartaVolteada1) {
             cartaVolteada2 = cartaClickeada;
             clickBloqueado = true;
-            intentos++; // Incrementar intentos
-            actualizarLabels(); // Actualizar la vista
+            intentos++; // incrementa intentos
+            actualizarLabels(); // actualiza la vista
             
             ImageView frente1 = (ImageView) cartaVolteada1.getChildren().get(1);
             ImageView frente2 = (ImageView) cartaVolteada2.getChildren().get(1);
@@ -288,7 +387,7 @@ public class Juego_memoriaController implements Initializable {
             } else {
                 // si son iguales, se dejan volteadas y se suma el puntaje
                 String url1 = frente1.getImage() != null ? frente1.getImage().getUrl() : "";
-                // Comprobar si es la pareja trampa
+                // comprobar si es la pareja trampa
                 boolean esTrampa = url1.contains(cartaTrampaNombre);
                 cartaVolteada1 = null;
                 cartaVolteada2 = null;
@@ -316,20 +415,132 @@ public class Juego_memoriaController implements Initializable {
         }
     }
 
+    private void checkMatch() {
+        intentos++;
+        if (cartaVolteada1.getChildren().get(1).equals(cartaVolteada2.getChildren().get(1))) {
+            parejasEncontradas++;
+            puntajeTotal += 10;
+            cartaVolteada1.setVisible(false);
+            cartaVolteada2.setVisible(false);
+            cartaVolteada1.setEffect(null);
+            cartaVolteada2.setEffect(null);
+            cartaVolteada1 = null;
+            cartaVolteada2 = null;
+            actualizarLabels();
+            if (parejasEncontradas == totalCartas / 2) {
+                mostrarAlertaFinYReiniciar("¡Felicidades! Has encontrado todas las parejas.");
+            }
+        } else {
+            clickBloqueado = true;
+            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1));
+            delay.setOnFinished(e -> {
+                ImageView imagenFrente1 = (ImageView) cartaVolteada1.getChildren().get(1);
+                ImageView imagenReverso1 = (ImageView) cartaVolteada1.getChildren().get(0);
+                ImageView imagenFrente2 = (ImageView) cartaVolteada2.getChildren().get(1);
+                ImageView imagenReverso2 = (ImageView) cartaVolteada2.getChildren().get(0);
+                imagenFrente1.setVisible(false);
+                imagenReverso1.setVisible(true);
+                imagenFrente2.setVisible(false);
+                imagenReverso2.setVisible(true);
+                cartaVolteada1.setEffect(null);
+                cartaVolteada2.setEffect(null);
+                cartaVolteada1 = null;
+                cartaVolteada2 = null;
+                clickBloqueado = false;
+            });
+            delay.play();
+            actualizarLabels();
+        }
+    }
+
+    private void reiniciarCartas() {
+        tableroGrid.getChildren().clear();
+        Collections.shuffle(nombresCartasBarajadas);
+        int cartaIndex = 0;
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                if (cartaIndex < nombresCartasBarajadas.size()) {
+                    String nombreArchivoFrente = nombresCartasBarajadas.get(cartaIndex++);
+                    StackPane cartaVisual = crearCarta(nombreArchivoFrente);
+                    tableroGrid.add(cartaVisual, j, i);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
     private void actualizarLabels() {
-        Platform.runLater(() -> {
-            intentosLabel.setText("Intentos: " + intentos);
-            puntajeLabel.setText("Puntos: " + puntajeTotal);
-        });
+        tiempoLabel.setText(String.format("Tiempo: %02d:%02d", tiempoRestante / 60, tiempoRestante % 60));
+        intentosLabel.setText("Intentos: " + intentos);
+        puntajeLabel.setText("Puntaje: " + puntajeTotal);
+    }
+
+    @FXML
+    private void handleReiniciarPartida() {
+        javax.sound.sampled.Clip audioClip = com.mycompany.juegomemoria.MenuPrincipalController.getAudioClip();
+        if (timer != null) {
+            timer.cancel();
+        }
+        partidaPausada = false;
+        musicaPausada = false;
+        posicionMusica = 0;
+        parejasEncontradas = 0;
+        puntajeTotal = 0;
+        intentos = 0;
+        reiniciarCartas();
+        actualizarLabels();
+        pausarButton.setText("Pausar Partida");
+        iniciarJuego();
+        if (audioClip != null) {
+            audioClip.setFramePosition(0);
+            audioClip.start();
+        }
     }
     
-    private void mostrarMensajeFinPartida() {
-        Platform.runLater(() -> {
-            if (felicidadesPanel != null) {
-                felicidadesPanel.setVisible(true);
-                felicidadesPanel.setManaged(true);
+    @FXML
+    private void handlePausarPartida() {
+        javax.sound.sampled.Clip audioClip = com.mycompany.juegomemoria.MenuPrincipalController.getAudioClip();
+        
+        partidaPausada = !partidaPausada;
+        
+        if (partidaPausada) {
+            // Pausar la partida y la música
+            pausarButton.setText("Reanudar Partida");
+            
+            if (audioClip != null && audioClip.isRunning()) {
+                posicionMusica = audioClip.getMicrosecondPosition();
+                audioClip.stop();
+                musicaPausada = true;
             }
-        });
+        } else {
+            // Reanudar la partida y la música
+            pausarButton.setText("Pausar Partida");
+            
+            if (audioClip != null && musicaPausada) {
+                audioClip.setMicrosecondPosition(posicionMusica);
+                audioClip.start();
+                musicaPausada = false;
+            }
+        }
+    }
+    
+    @FXML
+    private void handleMusicButtonAction() {
+        javax.sound.sampled.Clip audioClip = com.mycompany.juegomemoria.MenuPrincipalController.getAudioClip();
+        if (audioClip != null) {
+            if (audioClip.isRunning()) {
+                // Si la música está corriendo, guardar la posición y parar
+                posicionMusica = audioClip.getMicrosecondPosition();
+                audioClip.stop();
+                musicButton.setText("Encender Música");
+            } else {
+                // Si la música está parada, reanudar desde la posición guardada
+                audioClip.setMicrosecondPosition(posicionMusica);
+                audioClip.start();
+                musicButton.setText("Apagar Música");
+            }
+        }
     }
     
     @FXML
@@ -339,125 +550,5 @@ public class Juego_memoriaController implements Initializable {
         } catch (Exception e) {
             System.err.println("Error volviendo al menú: " + e.getMessage());
         }
-    }
-    
-    @FXML
-    private void handlePausarPartida() {
-        if (partidaPausada) {
-            // reanudar partida
-            partidaPausada = false;
-            pausarButton.setText("Pausar Partida");
-        } else {
-            // pausar partida
-            partidaPausada = true;
-            pausarButton.setText("Reanudar Partida");
-        }
-    }
-    
-    @FXML
-    private void handleReiniciarPartida() {
-        // Cancelar el timer actual si existe
-        if (timer != null) {
-            timer.cancel();
-        }
-        
-        // reinicia las variables del juego
-        partidaPausada = false;
-        parejasEncontradas = 0;
-        puntajeTotal = 0;
-        intentos = 0;
-        
-        // reinicia las cartas
-        reiniciarCartas();
-        actualizarLabels();
-        pausarButton.setText("Pausar Partida");
-        
-        // Reiniciar el temporizador
-        iniciarJuego();
-    }
-    
-    
-    
-    private void reiniciarCartas() {
-        // baraja  las cartas nuevamente
-        Collections.shuffle(nombresCartasBarajadas);
-        // Voltea todas las cartas
-        tableroGrid.getChildren().clear();
-        int cartaIndex = 0;
-        for (int i = 0; i < filas; i++) {
-            for (int j = 0; j < columnas; j++) {
-                if (cartaIndex < nombresCartasBarajadas.size()) {
-                    String nombreArchivoFrente = nombresCartasBarajadas.get(cartaIndex++);
-                    StackPane cartaVisual = crearCarta(nombreArchivoFrente);
-                    tableroGrid.add(cartaVisual, j, i);
-                }
-            }
-        }
-        cartaVolteada1 = null;
-        cartaVolteada2 = null;
-        clickBloqueado = false;
-    }
-
-    @FXML
-    private void handleMusicButtonAction() {
-        javax.sound.sampled.Clip audioClip = com.mycompany.juegomemoria.MenuPrincipalController.getAudioClip();
-        if (audioClip != null) {
-            if (audioClip.isRunning()) {
-                audioClip.stop();
-                musicButton.setText("Encender Música");
-            } else {
-                audioClip.start();
-                musicButton.setText("Apagar Música");
-            }
-        }
-    }
-    @FXML
-    private int tiempoRestante = 60;
-    private Timer timer;
-    
-    
-    private void iniciarJuego(){
-        
-        tiempoRestante = 60;
-        tiempoLabel.setText("Tiempo: 01:00");
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask(){
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    // Solo contar el tiempo si la partida no está pausada
-                    if (!partidaPausada) {
-                        if (tiempoRestante > 0) {
-                            tiempoRestante--;
-                            int minutos = tiempoRestante / 60;
-                            int segundos = tiempoRestante % 60;
-                            tiempoLabel.setText(String.format("Tiempo: %02d:%02d", minutos, segundos));
-                        } else {
-                            timer.cancel();
-                            mostrarAlertaFinYReiniciar("¡Se acabó el tiempo! La partida se reiniciará automáticamente.");
-                        }
-                    }
-                });
-            }
-        }, 0, 1000);
-    }
-    
-    private void mostrarAlertaFin(String mensaje) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle("Fin del juego");
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-        alerta.showAndWait();
-    }
-    
-    private void mostrarAlertaFinYReiniciar(String mensaje) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle("Fin del juego");
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-        alerta.showAndWait();
-        
-        // Reiniciar la partida automáticamente después de mostrar el mensaje
-        handleReiniciarPartida();
     }
 }

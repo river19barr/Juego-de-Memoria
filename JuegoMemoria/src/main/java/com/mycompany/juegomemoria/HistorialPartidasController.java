@@ -4,8 +4,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -24,17 +29,21 @@ public class HistorialPartidasController implements Initializable {
     @FXML private StackPane rootPane;
     @FXML private ImageView backgroundImageView;
     @FXML private BorderPane mainContentPane;
-    @FXML private ListView<String> partidasListView;
     @FXML private ScrollPane scrollPane;
     @FXML private Label mensajeLabel;
     @FXML private Button jugarButton;
+    @FXML private TableView<PartidaGuardada> partidasTableView;
+    @FXML private TableColumn<PartidaGuardada, String> fechaCol;
+    @FXML private TableColumn<PartidaGuardada, String> tiempoCol;
+    @FXML private TableColumn<PartidaGuardada, Integer> intentosCol;
+    @FXML private TableColumn<PartidaGuardada, Integer> puntosCol;
     
     private List<PartidaGuardada> partidasGuardadas;
     private static final String ARCHIVO_HISTORIAL = "historial_partidas.json";
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Configurar imagen de fondo
+        // imagen de fondo
         backgroundImageView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundImageView.fitHeightProperty().bind(rootPane.heightProperty());
         
@@ -45,12 +54,13 @@ public class HistorialPartidasController implements Initializable {
         }
         
         partidasGuardadas = cargarPartidasGuardadas();
+        configurarTabla();
         mostrarPartidas();
         
-        // Deshabilita el botón al inicio
+        // deshabilita el botón al iniciar partida
         jugarButton.setDisable(true);
-        // Se habilita solo si ha seleccionado una partida 
-        partidasListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+        // se habilita solo si ha seleccionado una partida 
+        partidasTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             jugarButton.setDisable(newVal == null);
         });
     }
@@ -58,27 +68,24 @@ public class HistorialPartidasController implements Initializable {
     private List<PartidaGuardada> cargarPartidasGuardadas() {
         List<PartidaGuardada> partidas = new ArrayList<>();
         File archivo = new File(ARCHIVO_HISTORIAL);
-        
+        System.out.println("[DEBUG] Leyendo historial desde: " + archivo.getAbsolutePath());
         if (archivo.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
-                StringBuilder contenido = new StringBuilder();
                 String linea;
                 while ((linea = reader.readLine()) != null) {
-                    contenido.append(linea);
-                }
-                
-                // Parsear JSON simple (formato: fecha|tiempo|intentos|puntos)
-                String[] lineas = contenido.toString().split("\n");
-                for (String lineaPartida : lineas) {
-                    if (!lineaPartida.trim().isEmpty()) {
-                        String[] datos = lineaPartida.split("\\|");
-                        if (datos.length >= 4) {
-                            partidas.add(new PartidaGuardada(
-                                datos[0], // fecha
-                                datos[1], // tiempo
-                                Integer.parseInt(datos[2]), // intentos
-                                Integer.parseInt(datos[3])  // puntos
-                            ));
+                    // permite tanto partidas separadas por salto de línea como todo en una sola línea
+                    String[] lineas = linea.split("\\|(?=\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}\\|)");
+                    for (String lineaPartida : lineas) {
+                        if (!lineaPartida.trim().isEmpty()) {
+                            String[] datos = lineaPartida.split("\\|");
+                            if (datos.length >= 4) {
+                                partidas.add(new PartidaGuardada(
+                                    datos[0], // fecha
+                                    datos[1], // tiempo
+                                    Integer.parseInt(datos[2]), // intentos
+                                    Integer.parseInt(datos[3])  // puntos
+                                ));
+                            }
                         }
                     }
                 }
@@ -86,25 +93,25 @@ public class HistorialPartidasController implements Initializable {
                 System.err.println("Error cargando historial: " + e.getMessage());
             }
         }
-        
         return partidas;
     }
     
+    private void configurarTabla() {
+        fechaCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFecha()));
+        tiempoCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTiempo()));
+        intentosCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getIntentos()).asObject());
+        puntosCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getPuntos()).asObject());
+    }
+
     private void mostrarPartidas() {
-        partidasListView.getItems().clear();
-        
+        ObservableList<PartidaGuardada> partidasObs = FXCollections.observableArrayList(partidasGuardadas);
+        partidasTableView.setItems(partidasObs);
         if (partidasGuardadas.isEmpty()) {
             mensajeLabel.setVisible(true);
             scrollPane.setVisible(false);
         } else {
             mensajeLabel.setVisible(false);
             scrollPane.setVisible(true);
-            
-            for (PartidaGuardada partida : partidasGuardadas) {
-                String textoPartida = String.format("📅 %s | ⏱️ %s | 🎯 %d intentos | 🏆 %d puntos",
-                    partida.getFecha(), partida.getTiempo(), partida.getIntentos(), partida.getPuntos());
-                partidasListView.getItems().add(textoPartida);
-            }
         }
     }
     
@@ -119,14 +126,9 @@ public class HistorialPartidasController implements Initializable {
     
     @FXML
     private void handleJugarPartida() {
-        int indiceSeleccionado = partidasListView.getSelectionModel().getSelectedIndex();
-        
-        if (indiceSeleccionado >= 0 && indiceSeleccionado < partidasGuardadas.size()) {
-            PartidaGuardada partidaSeleccionada = partidasGuardadas.get(indiceSeleccionado);
-            
-            // Guarda la partida seleccionada para que el juego la cargue
+        PartidaGuardada partidaSeleccionada = partidasTableView.getSelectionModel().getSelectedItem();
+        if (partidaSeleccionada != null) {
             PartidaGuardada.setPartidaParaCargar(partidaSeleccionada);
-            
             try {
                 App.setRoot("com/mycompany/juegomemoria/Juego_memoria");
             } catch (Exception e) {
@@ -135,7 +137,7 @@ public class HistorialPartidasController implements Initializable {
         }
     }
     
-    // Clase interna para representar una partida guardada
+    // clase interna para representar una partida guardada
     public static class PartidaGuardada {
         private String fecha;
         private String tiempo;
@@ -156,7 +158,7 @@ public class HistorialPartidasController implements Initializable {
         public int getIntentos() { return intentos; }
         public int getPuntos() { return puntos; }
         
-        // Método para guardar partida en el historial
+        // metodo para guardar partida en el historial
         public static void guardarPartida(String tiempo, int intentos, int puntos) {
             LocalDateTime ahora = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
